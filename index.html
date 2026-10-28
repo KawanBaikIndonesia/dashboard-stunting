@@ -197,7 +197,7 @@ const empty=(p,m)=>!rep(p,m)||!p[m].balita;
 const valid=(p,m)=>rep(p,m)&&p[m].balita>0&&p[m].balita>=MINLAP*maxBal(p);
 const rate=r=>r&&r.DU?r.stunting/r.DU*100:null;
 const zoneOf=v=>v==null?'none':v>=ZONE_CRIT?'crit':v>=ZONE_WARN?'warn':'good';
-const ZL={crit:'Kritis',warn:'Waspada',good:'Terkendali',none:'Belum ada data'};
+const ZL={crit:'Kritis / Sangat Tinggi',warn:'Waspada / Tinggi',good:'Terkendali/Rendah/Sedang',none:'Belum ada data'};
 const ZI={crit:'▲',warn:'◆',good:'●',none:'○'};
 const ZC={crit:'var(--crit)',warn:'var(--warn)',good:'var(--good)',none:'var(--none)'};
 function sumP(list,m){let DU=0,st=0,bal=0;list.forEach(p=>{const r=p[m];if(r&&r.DU!=null){DU+=r.DU;st+=r.stunting;bal+=r.balita||0}});return{DU,st,bal,v:pct(st,DU)}}
@@ -228,8 +228,8 @@ function findings(m){
       text:`Hitungan di Puskesmas ${nm} tidak cocok antar kolom (naik + tidak naik berat badan ≠ ditimbang terkoreksi, atau stunting lebih besar dari yang diukur). Perlu diperiksa.`,age:1});
     if(r.desaTotal&&r.desaInput!=null&&r.desaInput<r.desaTotal)out.push({key:'R5:'+p.name,rule:'R5',level:'tps',opd:'Dinkes',ent:nm,short:`${nm}: ${r.desaTotal-r.desaInput} desa belum input`,
       text:`Di Puskesmas ${nm}, ${r.desaTotal-r.desaInput} dari ${r.desaTotal} desa belum menginput data balita.`,age:1});
-    if(valid(p,m)&&rate(r)>=ZONE_CRIT)out.push({key:'R8:'+p.name,rule:'R8',level:'bupati',opd:'Dinkes',ent:nm,short:`${nm}: zona kritis ${fmt(rate(r),1)}%`,
-      text:`Puskesmas ${nm} di zona kritis: ${fmt(rate(r),1)}% balita yang diukur stunting.`,age:since(x=>valid(p,x)&&rate(p[x])>=ZONE_CRIT)})
+    if(valid(p,m)&&rate(r)>=ZONE_CRIT)out.push({key:'R8:'+p.name,rule:'R8',level:'bupati',opd:'Dinkes',ent:nm,short:`${nm}: zona Kritis / Sangat Tinggi ${fmt(rate(r),1)}%`,
+      text:`Puskesmas ${nm} di zona Kritis / Sangat Tinggi: ${fmt(rate(r),1)}% balita yang diukur stunting.`,age:since(x=>valid(p,x)&&rate(p[x])>=ZONE_CRIT)})
   });
   const G=[['gk','balita gizi kurang'],['bk','balita berat badan kurang'],['t','balita berat badan tidak naik'],['kek','ibu hamil KEK (kurang energi kronis)']];
   G.forEach(([g,lab])=>{let tot=0,got=0,n0=0;
@@ -257,7 +257,7 @@ function summaryHTML(m){
   lines.push(l1);
   const kr=P.filter(p=>valid(p,m)&&rate(p[m])>=ZONE_CRIT).map(p=>title(p.name));
   const wr=P.filter(p=>valid(p,m)&&rate(p[m])>=ZONE_WARN&&rate(p[m])<ZONE_CRIT).length;
-  lines.push(`<b>Sebaran.</b> ${kr.length} Puskesmas di zona kritis${kr.length?' ('+kr.slice(0,4).join(', ')+(kr.length>4?', dan lainnya':'')+')':''}, ${wr} di zona waspada.`);
+  lines.push(`<b>Sebaran.</b> ${kr.length} Puskesmas di zona Kritis / Sangat Tinggi${kr.length?' ('+kr.slice(0,4).join(', ')+(kr.length>4?', dan lainnya':'')+')':''}, ${wr} di zona Waspada / Tinggi.`);
   const urg=[];const r1=bup.filter(f=>f.rule==='R1');
   if(r1.length)urg.push(`makanan tambahan belum tercatat sampai sasaran di ${Math.max(...r1.map(f=>f.n0))} dari ${P.length} Puskesmas (tanggung jawab Dinkes)`);
   const lp=[...new Set(bup.filter(f=>f.rule==='R2'||f.rule==='R4').map(f=>f.ent))];const prt=F.filter(f=>f.rule==='R3').map(f=>f.ent);
@@ -341,7 +341,7 @@ function renderCrumb(){const c=$('crumb');c.textContent='';
   else c.appendChild(el('span',{class:'here'},cur.kec))}
 function renderLegend(){const L=$('legend');
   const it=(c,t,h)=>`<span><i class="sw" style="background:${c}${h?';background-image:repeating-linear-gradient(45deg,#09192d 0 2px,transparent 2px 6px)':''}"></i>${t}</span>`;
-  if(cur.layer==='stunting')L.innerHTML=it('var(--good)',`${ZI.good} Terkendali (&lt;${ZONE_WARN}%)`)+it('var(--warn)',`${ZI.warn} Waspada (${ZONE_WARN}–&lt;${ZONE_CRIT}%)`)+it('var(--crit)',`${ZI.crit} Kritis (≥${ZONE_CRIT}%)`)+it('var(--none)','Laporan tidak lengkap',true)+(cur.kec?'<span>Garis miring: warna ikut kecamatan</span><span>Titik: balita sedikit</span>':'');
+  if(cur.layer==='stunting')L.innerHTML=it('var(--good)',`${ZI.good} Terkendali/Rendah/Sedang (&lt;${ZONE_WARN}%)`)+it('var(--warn)',`${ZI.warn} Waspada / Tinggi (${ZONE_WARN}–&lt;${ZONE_CRIT}%)`)+it('var(--crit)',`${ZI.crit} Kritis / Sangat Tinggi (≥${ZONE_CRIT}%)`)+it('var(--none)','Laporan tidak lengkap',true)+(cur.kec?'<span>Garis miring: warna ikut kecamatan</span><span>Titik: balita sedikit</span>':'');
   else L.innerHTML=it('var(--good)','Lengkap')+it('#c9a23a','Terisi sebagian')+it('var(--crit)','Kosong')}
 
 /* ---------- komponen panel ---------- */
@@ -422,13 +422,13 @@ const ov=$('ov');
 function openOv(t,h,focus){$('ovT').textContent=t;$('ovB').innerHTML=h;ov.classList.remove('hide');$('ovX').focus();if(focus){const g=$('g-'+focus);if(g)g.scrollIntoView({block:'start'})}}
 function closeOv(){ov.classList.add('hide')}
 function openTemuan(opd){const m=cur.month,F=findings(m);
-  openOv('Temuan per OPD · '+m+' 2026',`<p class="sm">Temuan dihitung otomatis dari data yang diunggah, dalam tiga jenis: Perlu tindakan (zona kritis, makanan tambahan belum sampai), Angka janggal (angka tidak masuk akal), dan Data belum masuk (laporan belum ada atau tidak lengkap). Aturannya masih draf, menunggu tinjauan Dinkes. OPD = Organisasi Perangkat Daerah. Status respon dan catatan Bappeda diisi TPPS setelah rapat.</p>`+
+  openOv('Temuan per OPD · '+m+' 2026',`<p class="sm">Temuan dihitung otomatis dari data yang diunggah, dalam tiga jenis: Perlu tindakan (zona Kritis / Sangat Tinggi, makanan tambahan belum sampai), Angka janggal (angka tidak masuk akal), dan Data belum masuk (laporan belum ada atau tidak lengkap). Aturannya masih draf, menunggu tinjauan Dinkes. OPD = Organisasi Perangkat Daerah. Status respon dan catatan Bappeda diisi TPPS setelah rapat.</p>`+
   OPDS.map(([k,n])=>{const L=F.filter(f=>f.opd===k).sort((a,b)=>kindOf(a)[2]-kindOf(b)[2]||(a.level==='bupati'?0:1)-(b.level==='bupati'?0:1)||b.age-a.age);
     return`<div id="g-${k}" style="display:flex;flex-direction:column;gap:8px"><h3>${k}<span class="sm" style="text-transform:none;letter-spacing:0;font-family:var(--sans)">${n} · ${L.length} temuan</span></h3>${L.length?L.map(fndHTML).join(''):`<div class="empty">${k==='Dinkes'?'Tidak ada temuan otomatis bulan ini.':k==='Bappeda'?'Catatan rekomendasi TPPS bulan ini diisi staf Bappeda setelah rapat.':'Belum ada temuan otomatis. Temuan sanitasi dan air minum menunggu data KRS (Keluarga Risiko Stunting) yang terbaru dan penjelasan kodenya.'}</div>`}</div>`}).join(''),opd)}
 function openAbout(){openOv('Tentang data ini',`<ul>
   <li><b>Sumber.</b> Tarikan bulanan SigiziKesga/e-PPGBM per Puskesmas (Juni–Agustus 2026) dan laporan per desa e-PPGBM (Juni). Batas wilayah: Badan Informasi Geospasial.</li>
   <li><b>Rumus.</b> Stunting = balita stunting ÷ balita ditimbang dan diukur. Satuan kecamatan = jumlah semua Puskesmas di kecamatan itu.</li>
-  <li><b>Zona</b> (≥30% kritis, 20–&lt;30% waspada, &lt;20% terkendali) mengacu pada Standar Ambang Batas Kesehatan Masyarakat WHO (de Onis et al., 2018) & Kepmenkes RI No. HK.01.07/MENKES/1928/2022.</li>
+  <li><b>Zona</b> (≥30% Kritis / Sangat Tinggi, 20–&lt;30% Waspada / Tinggi, &lt;20% Terkendali/Rendah/Sedang) mengacu pada Standar Ambang Batas Kesehatan Masyarakat WHO (de Onis et al., 2018) & Kepmenkes RI No. HK.01.07/MENKES/1928/2022.</li>
   <li><b>Target ${TARGET}%</b> adalah target nasional berbasis survei (SSGI), bukan ukuran yang persis sama dengan data e-PPGBM, jadi jarak ke target hanya gambaran.</li>
   <li><b>Data desa</b> baru ada untuk Juni. Bulan lain, desa meminjam warna kecamatan (garis miring).</li>
   <li><b>Enam desa</b> di laporan e-PPGBM belum punya batas di peta BIG (Walatungga, Kilimbatu, Praimundi, Uimanu, Tanggedu, Palindi Tana Bara); datanya tetap dihitung di kecamatan.</li>
